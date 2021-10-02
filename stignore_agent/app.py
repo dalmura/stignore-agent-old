@@ -5,6 +5,8 @@ A basic flask API that provides a set of endpoints to:
 * Work with content types (folders underneath the base)
 * Manipulate each content types .stignore file
 """
+import shutil
+
 from pathlib import Path
 
 from flask import Flask, current_app, request, jsonify
@@ -61,9 +63,11 @@ def content_type_listing(content_type: str):
         folders.append(
             {
                 "name": content.name,
-                "size_bytes": sum(
+                "size_megabytes": sum(
                     f.stat().st_size for f in content.glob("**/*") if f.is_file()
-                ),
+                )
+                / 1024
+                / 1024,
             }
         )
 
@@ -71,7 +75,6 @@ def content_type_listing(content_type: str):
         {
             "ok": True,
             "folders": folders,
-            "count": len(folders),
         }
     )
 
@@ -127,7 +130,6 @@ def stignore_listing(content_type: str):
         {
             "ok": True,
             "entries": entries,
-            "count": len(entries),
         }
     )
 
@@ -211,21 +213,148 @@ def stignore_modification(content_type: str):
 
 
 @app.route("/api/v1/<str:content_type>/stignore/flush")
-def stignore_flush(content_type: str):
+def stignore_flush_report(content_type: str):
     """
     Prepare a list of actions that would occur if a flush was to happen
     This is a fail safe for the user to verify what *would* happen
     """
-    return jsonify(content_type)
+    base_folder = Path(current_app.config["base_folder"])
+
+    for content_folder in current_app.config["folders"]:
+        if content_type == content_folder["name"]:
+            break
+    else:
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+
+    content_folder = base_folder / content_type
+
+    stignore = content_folder / ".stignore"
+
+    if not stignore.exists():
+        return jsonify(
+            {
+                "ok": False,
+                "msg": ".stignore doesn't exists for the provided content_type",
+            }
+        )
+
+    entries = []
+
+    with open(stignore, "rt", encoding="utf-8") as stignore_file:
+        for line in stignore_file:
+            if line.startswith("!"):
+                ignore_type = "keep"
+                name = line[1:]
+            else:
+                ignore_type = "ignore"
+                name = line
+
+            if name.endswith("/"):
+                name = line[:-1]
+
+            entries.append(
+                {
+                    "entry": line,
+                    "name": name,
+                    "type": ignore_type,
+                }
+            )
+
+    actions = []
+
+    for entry in entries:
+        if entry["type"] != "ignore":
+            # We're only looking for entries that could result in cleaning up
+            continue
+
+        entry_path = content_folder / entry["name"]
+
+        if entry_path.exists():
+            # If it exists, and we're ignoring it, it means we need to delete
+            actions.append(
+                {
+                    "folder": str(entry_path),
+                    "size_megabytes": sum(
+                        f.stat().st_size for f in entry_path.glob("**/*") if f.is_file()
+                    )
+                    / 1024
+                    / 1024,
+                    "action": "delete",
+                }
+            )
+
+    return jsonify(
+        {
+            "ok": True,
+            "actions": actions,
+        }
+    )
 
 
 @app.route("/api/v1/<str:content_type>/stignore/flush", methods=["POST"])
-def stignore_flush(content_type: str):
+def stignore_flush_delete(content_type: str):
     """
     Flush the stignore file by performing all operations marked in it
     This is mainly used to clean up all folders we've marked to ignore
     """
-    payload = request.get_json(force=True)
-    payload["content_type"] = content_type
+    base_folder = Path(current_app.config["base_folder"])
 
-    return jsonify(payload)
+    for content_folder in current_app.config["folders"]:
+        if content_type == content_folder["name"]:
+            break
+    else:
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+
+    content_folder = base_folder / content_type
+
+    stignore = content_folder / ".stignore"
+
+    if not stignore.exists():
+        return jsonify(
+            {
+                "ok": False,
+                "msg": ".stignore doesn't exists for the provided content_type",
+            }
+        )
+
+    entries = []
+
+    with open(stignore, "rt", encoding="utf-8") as stignore_file:
+        for line in stignore_file:
+            if line.startswith("!"):
+                ignore_type = "keep"
+                name = line[1:]
+            else:
+                ignore_type = "ignore"
+                name = line
+
+            if name.endswith("/"):
+                name = line[:-1]
+
+            entries.append(
+                {
+                    "entry": line,
+                    "name": name,
+                    "type": ignore_type,
+                }
+            )
+
+    actions = []
+
+    for entry in entries:
+        if entry["type"] != "ignore":
+            # We're only looking for entries that could result in cleaning up
+            continue
+
+        entry_path = content_folder / entry["name"]
+
+        if entry_path.exists():
+            shutil.rmtree(entry_path)
+            actions.append(str(entry_path))
+
+    return jsonify(
+        {
+            "ok": True,
+            "actions": actions,
+        }
+    )
