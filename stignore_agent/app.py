@@ -139,10 +139,84 @@ def stignore_modification(content_type: str):
     We do not perform any 'cleanup' associated with the modification
     Calling the flush endpoint will trigger that
     """
-    payload = request.get_json(force=True)
-    payload["content_type"] = content_type
+    base_folder = Path(current_app.config["base_folder"])
 
-    return jsonify(payload)
+    for content_folder in current_app.config["folders"]:
+        if content_type == content_folder["name"]:
+            break
+    else:
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+
+    content_folder = base_folder / content_type
+
+    stignore = content_folder / ".stignore"
+
+    if not stignore.exists():
+        return jsonify(
+            {
+                "ok": False,
+                "msg": ".stignore doesn't exists for the provided content_type",
+            }
+        )
+
+    entries = []
+
+    with open(stignore, "rt", encoding="utf-8") as stignore_file:
+        for line in stignore_file:
+            entries.append(line)
+
+    # Insert the payload
+    payload = request.get_json(force=True)
+
+    actions = {
+        "add": [],
+        "remove": [],
+    }
+
+    for action in payload["actions"]:
+        if action["action"] not in ("add", "remove"):
+            return jsonify({"ok": False, "msg": "Payload action is invalid"})
+
+        if action["type"] not in ("keep", "ignore"):
+            return jsonify({"ok": False, "msg": "Payload type is invalid"})
+
+        if action["type"] == "keep":
+            new_entry = f"!{action['name']}"
+        else:
+            new_entry = action["name"]
+
+        if not new_entry.endswith("/"):
+            new_entry = f"{new_entry}/"
+
+        if action["action"] == "add":
+            actions["add"].append(new_entry)
+        elif action["action"] == "remove":
+            actions["remove"].append(new_entry)
+
+    for entry in actions["remove"]:
+        if entry in entries:
+            entries.remove(entry)
+
+    for entry in actions["add"]:
+        if entry not in entries:
+            entries.append(entry)
+
+    # Write out new stignore file
+    entries.sort()
+
+    with open(stignore, "wt", encoding="utf-8") as stignore_file:
+        stignore_file.writelines(entries)
+
+    return jsonify({"ok": True, "msg": "Actions applied"})
+
+
+@app.route("/api/v1/<str:content_type>/stignore/flush")
+def stignore_flush(content_type: str):
+    """
+    Prepare a list of actions that would occur if a flush was to happen
+    This is a fail safe for the user to verify what *would* happen
+    """
+    return jsonify(content_type)
 
 
 @app.route("/api/v1/<str:content_type>/stignore/flush", methods=["POST"])
