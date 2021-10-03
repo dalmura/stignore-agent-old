@@ -57,7 +57,7 @@ def content_type_listing(content_type: str):
         if content_type == content_folder["name"]:
             break
     else:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
 
     # pylint: disable=undefined-loop-variable
     search_depth = content_folder.get("depth", 0) + 1
@@ -66,7 +66,7 @@ def content_type_listing(content_type: str):
     content_folder = base_folder / content_type
 
     if not content_folder.exists():
-        return jsonify({"ok": False, "msg": "Provided content_type does not exist"})
+        return jsonify({"ok": False, "msg": "Provided content_type does not exist"}), 400
 
     folders = []
 
@@ -92,7 +92,7 @@ def content_type_listing(content_type: str):
     return jsonify(
         {
             "ok": True,
-            "folders": folders,
+            "folders": sorted(folders, key=lambda x: x["name"]),
         }
     )
 
@@ -108,7 +108,7 @@ def stignore_listing(content_type: str):
         if content_type == content_folder["name"]:
             break
     else:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
 
     content_folder = base_folder / content_type
 
@@ -120,13 +120,14 @@ def stignore_listing(content_type: str):
                 "ok": False,
                 "msg": ".stignore doesn't exists for the provided content_type",
             }
-        )
+        ), 400
 
     entries = []
 
     with open(stignore, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
-            line = line[:-1]
+            if line.endswith("\n"):
+                line = line[:-1]
 
             if line.startswith("!"):
                 ignore_type = "keep"
@@ -149,7 +150,7 @@ def stignore_listing(content_type: str):
     return jsonify(
         {
             "ok": True,
-            "entries": entries,
+            "entries": sorted(entries, key=lambda x: x["entry"]),
         }
     )
 
@@ -167,7 +168,7 @@ def stignore_modification(content_type: str):
         if content_type == content_folder["name"]:
             break
     else:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
 
     content_folder = base_folder / content_type
 
@@ -246,7 +247,7 @@ def stignore_flush_report(content_type: str):
         if content_type == content_folder["name"]:
             break
     else:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
 
     content_folder = base_folder / content_type
 
@@ -258,7 +259,7 @@ def stignore_flush_report(content_type: str):
                 "ok": False,
                 "msg": ".stignore doesn't exists for the provided content_type",
             }
-        )
+        ), 400
 
     entries = []
 
@@ -327,7 +328,7 @@ def stignore_flush_delete(content_type: str):
         if content_type == content_folder["name"]:
             break
     else:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"})
+        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
 
     content_folder = base_folder / content_type
 
@@ -339,13 +340,14 @@ def stignore_flush_delete(content_type: str):
                 "ok": False,
                 "msg": ".stignore doesn't exists for the provided content_type",
             }
-        )
+        ), 400
 
     entries = []
 
     with open(stignore, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
-            line = line[:-1]
+            if line.endswith("\n"):
+                line = line[:-1]
 
             if line.startswith("!"):
                 ignore_type = "keep"
