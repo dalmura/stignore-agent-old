@@ -52,6 +52,9 @@ if __name__ == "__main__":
             else:
                 config["folder"].append({"name": folder})
 
+    if not config.get("base_folder") or not config.get("folders"):
+        parser.error("--config-file not set or ENV vars not provided")
+
     app.config.update(config)
     app.config["logger"] = logger
 

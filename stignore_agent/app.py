@@ -27,7 +27,7 @@ def info_page():
 
 @app.route("/favicon.ico")
 def favicon():
-     return send_from_directory("static/img", "favicon.ico")
+    return send_from_directory("static/img", "favicon.ico")
 
 
 @app.route("/api/v1/types")
@@ -78,11 +78,12 @@ def content_type_listing(content_type: str):
         folders.append(
             {
                 "name": content.name,
-                "size_megabytes": sum(
-                    f.stat().st_size for f in content.glob("**/*") if f.is_file()
-                )
-                / 1024
-                / 1024,
+                "size_megabytes": round(
+                    sum(f.stat().st_size for f in content.glob("**/*") if f.is_file())
+                    / 1024
+                    / 1024,
+                    2,
+                ),
             }
         )
 
@@ -123,6 +124,8 @@ def stignore_listing(content_type: str):
 
     with open(stignore, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
+            line = line[:-1]
+
             if line.startswith("!"):
                 ignore_type = "keep"
                 name = line[1:]
@@ -180,6 +183,8 @@ def stignore_modification(content_type: str):
 
     with open(stignore, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
+            line = line[:-1]
+
             entries.append(line)
 
     # Insert the payload
@@ -257,6 +262,8 @@ def stignore_flush_report(content_type: str):
 
     with open(stignore, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
+            line = line[:-1]
+
             if line.startswith("!"):
                 ignore_type = "keep"
                 name = line[1:]
@@ -336,6 +343,8 @@ def stignore_flush_delete(content_type: str):
 
     with open(stignore, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
+            line = line[:-1]
+
             if line.startswith("!"):
                 ignore_type = "keep"
                 name = line[1:]

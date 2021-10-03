@@ -130,3 +130,6 @@ dmypy.json
 
 # vim
 *.swp
+
+# stagent-ignore specific
+config.yml
