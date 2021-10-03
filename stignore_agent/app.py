@@ -17,6 +17,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def info_page():
+    """ Basic info page for users discovering this through their browser """
     return jsonify(
         {
             "ok": True,
@@ -27,6 +28,7 @@ def info_page():
 
 @app.route("/favicon.ico")
 def favicon():
+    """ Static favicon covering the above info page """
     return send_from_directory("static/img", "favicon.ico")
 
 
