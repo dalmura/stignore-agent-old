@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 
+from stignore_agent.helpers import parse_config
 from stignore_agent.app import app
 
 
@@ -14,7 +15,7 @@ def junk_binary(megabytes):
 
 
 @pytest.fixture
-def share_folders(tmp_path):
+def agent_setup(tmp_path):
     base_folder = tmp_path / "shares"
     base_folder.mkdir()
 
@@ -81,45 +82,23 @@ def share_folders(tmp_path):
     share_2_folder_2_sub_2_object_1 = share_2_folder_2_sub_2 / "File 1"
     share_2_folder_2_sub_2_object_1.write_bytes(junk_binary(6))
 
-    yield {
-        "base_folder": base_folder,
+    yield parse_config({
+        "base_folder": str(base_folder),
         "folders": [
             {"name": "share-1"},
             {"name": "share-2", "depth": 1},
         ],
-    }
+    })
 
 
 @pytest.fixture
-def agent_config(share_folders, tmp_path):
-    config_path = tmp_path / "config.yml"
+def agent(agent_setup):
+    agent_setup["TESTING"] = True
 
-    data = {
-        "base_folder": str(share_folders["base_folder"]),
-        "folders": share_folders["folders"],
-    }
-
-    with open(config_path, "wt", encoding="utf-8") as config_file:
-        yaml.dump(data, config_file, explicit_start=True)
-
-    yield SimpleNamespace(
-        path=config_path,
-        base_folder=share_folders["base_folder"],
-        folders=share_folders["folders"],
-    )
-
-
-@pytest.fixture
-def agent(agent_config):
-    with open(agent_config.path, "rt", encoding="utf-8") as agent_config_file:
-        config = yaml.safe_load(agent_config_file)
-
-    config["TESTING"] = True
-
-    app.config.update(config)
+    app.config.update(agent_setup)
     app.testing = True
 
     yield SimpleNamespace(
         client=app.test_client(),
-        config=agent_config,
+        config=agent_setup,
     )

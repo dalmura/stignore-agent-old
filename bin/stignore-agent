@@ -6,7 +6,11 @@ import yaml
 import os
 import re
 
+from types import SimpleNamespace
+from pathlib import Path
+
 from stignore_agent.app import app
+from stignore_agent.helpers import parse_config
 
 
 SEARCH_DEPTH = re.compile(r"!(?P<depth>[0-9]+)!(?P<folder>.+)")
@@ -55,7 +59,7 @@ if __name__ == "__main__":
     if not config.get("base_folder") or not config.get("folders"):
         parser.error("--config-file not set or ENV vars not provided")
 
-    app.config.update(config)
+    app.config.update(parse_config(config))
     app.config["logger"] = logger
 
     app.config["SECRET_KEY"] = os.urandom(16)

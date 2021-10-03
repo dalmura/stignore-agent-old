@@ -45,7 +45,7 @@ def test_content_type_listing(agent):
 
 
 def test_stignore_listing(agent):
-    stignore_path = agent.config.base_folder / "share-1" / ".stignore"
+    stignore_path = agent.config["base_folder"] / "share-1" / ".stignore"
     stignore_path.write_text("Object 1/")
 
     response = agent.client.get("/api/v1/share-1/stignore")
@@ -57,7 +57,7 @@ def test_stignore_listing(agent):
         "ok": True,
         "entries": [
             {
-                "entry": "Object 1/",
+                "raw": "Object 1/",
                 "name": "Object 1",
                 "type": "ignore",
             },
