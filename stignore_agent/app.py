@@ -7,8 +7,6 @@ A basic flask API that provides a set of endpoints to:
 """
 import shutil
 
-from pathlib import Path
-
 from flask import Flask, current_app, request, jsonify, send_from_directory
 
 from stignore_agent.helpers import load_stignore_file, stignore_actions, load_actions
@@ -19,7 +17,7 @@ app = Flask("stignore-agent")
 
 @app.route("/")
 def info_page():
-    """ Basic info page for users discovering this through their browser """
+    """Basic info page for users discovering this through their browser"""
     return jsonify(
         {
             "ok": True,
@@ -30,7 +28,7 @@ def info_page():
 
 @app.route("/favicon.ico")
 def favicon():
-    """ Static favicon covering the above info page """
+    """Static favicon covering the above info page"""
     return send_from_directory("static/img", "favicon.ico")
 
 
@@ -53,18 +51,23 @@ def content_type_listing(content_type: str):
     Given a valid content type we return a listing of all folders underneath it
     Also respecting configured search depth
     """
-    base_folder = current_app.config["base_folder"]
     folders = current_app.config["folders"]
 
     content_folder = folders.get(content_type)
 
     if content_folder is None:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
+        return (
+            jsonify({"ok": False, "msg": "Provided content_type is not monitored"}),
+            400,
+        )
 
     search_depth = content_folder.depth + 1
 
     if not content_folder.path.exists():
-        return jsonify({"ok": False, "msg": "Provided content_type does not exist"}), 400
+        return (
+            jsonify({"ok": False, "msg": "Provided content_type does not exist"}),
+            400,
+        )
 
     folders = []
 
@@ -100,23 +103,28 @@ def stignore_listing(content_type: str):
     """
     Given a valid content type we return the .stignore files contents
     """
-    base_folder = current_app.config["base_folder"]
     folders = current_app.config["folders"]
 
     content_folder = folders.get(content_type)
 
     if content_folder is None:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
+        return (
+            jsonify({"ok": False, "msg": "Provided content_type is not monitored"}),
+            400,
+        )
 
     stignore = content_folder.path / ".stignore"
 
     if not stignore.exists():
-        return jsonify(
-            {
-                "ok": False,
-                "msg": ".stignore doesn't exists for the provided content_type",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "msg": ".stignore doesn't exists for the provided content_type",
+                }
+            ),
+            400,
+        )
 
     return jsonify(
         {
@@ -133,13 +141,15 @@ def stignore_modification(content_type: str):
     We do not perform any 'cleanup' associated with the modification
     Calling the flush endpoint will trigger that
     """
-    base_folder = current_app.config["base_folder"]
     folders = current_app.config["folders"]
 
     content_folder = folders.get(content_type)
 
     if content_folder is None:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
+        return (
+            jsonify({"ok": False, "msg": "Provided content_type is not monitored"}),
+            400,
+        )
 
     stignore = content_folder.path / ".stignore"
 
@@ -156,7 +166,14 @@ def stignore_modification(content_type: str):
 
     # Insert the payload
     payload = request.get_json(force=True)
-    actions = load_actions(payload)
+
+    if "actions" not in payload:
+        return jsonify({"ok": False, "msg": "No provided actions"})
+
+    actions = load_actions(payload["actions"])
+
+    if not actions["ok"]:
+        return jsonify(actions)
 
     for entry in actions["remove"]:
         if entry in raw_entries:
@@ -181,26 +198,31 @@ def stignore_flush_report(content_type: str):
     Prepare a list of actions that would occur if a flush was to happen
     This is a fail safe for the user to verify what *would* happen
     """
-    base_folder = current_app.config["base_folder"]
     folders = current_app.config["folders"]
 
     content_folder = folders.get(content_type)
 
     if content_folder is None:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
+        return (
+            jsonify({"ok": False, "msg": "Provided content_type is not monitored"}),
+            400,
+        )
 
     stignore = content_folder.path / ".stignore"
 
     if not stignore.exists():
-        return jsonify(
-            {
-                "ok": False,
-                "msg": ".stignore doesn't exists for the provided content_type",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "msg": ".stignore doesn't exists for the provided content_type",
+                }
+            ),
+            400,
+        )
 
     entries = load_stignore_file(stignore)
-    actions = stignore_actions(entries)
+    actions = stignore_actions(entries, content_folder.path)
 
     return jsonify(
         {
@@ -216,23 +238,28 @@ def stignore_flush_delete(content_type: str):
     Flush the stignore file by performing all operations marked in it
     This is mainly used to clean up all folders we've marked to ignore
     """
-    base_folder = current_app.config["base_folder"]
     folders = current_app.config["folders"]
 
     content_folder = folders.get(content_type)
 
     if content_folder is None:
-        return jsonify({"ok": False, "msg": "Provided content_type is not monitored"}), 400
+        return (
+            jsonify({"ok": False, "msg": "Provided content_type is not monitored"}),
+            400,
+        )
 
     stignore = content_folder.path / ".stignore"
 
     if not stignore.exists():
-        return jsonify(
-            {
-                "ok": False,
-                "msg": ".stignore doesn't exists for the provided content_type",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "msg": ".stignore doesn't exists for the provided content_type",
+                }
+            ),
+            400,
+        )
 
     entries = load_stignore_file(stignore)
     actions = stignore_actions(entries, content_folder, include_size=False)

@@ -1,3 +1,8 @@
+"""
+stignore-agent helpers
+
+Various helper functions to remove complexity from app views
+"""
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -53,11 +58,14 @@ def load_stignore_file(filename, sort=True):
 
     return entries
 
+
 def stignore_actions(entries, content_folder, include_size=True):
     """
     Takes a list of stignore entities
     Returns a list of actions to align the entities to what appears on disk
     """
+    actions = []
+
     for entry in entries:
         if entry["type"] != "ignore":
             # We're only looking for entries that could result in cleaning up
@@ -75,10 +83,14 @@ def stignore_actions(entries, content_folder, include_size=True):
         )
 
         if include_size:
-            size_bytes = sum(f.stat().st_size for f in entry_path.glob("**/*") if f.is_file())
+            size_bytes = sum(
+                f.stat().st_size for f in entry_path.glob("**/*") if f.is_file()
+            )
             action.size_megabytes = size_bytes / 1024 / 1024
 
         actions.append(action)
+
+    return actions
 
 
 def load_actions(actions):
@@ -86,17 +98,18 @@ def load_actions(actions):
     Parses a list of provided entity actions
     Returns a list of raw entity lines to add, and another to remove
     """
-    actions = {
+    parsed = {
+        "ok": True,
         "add": [],
         "remove": [],
     }
 
-    for action in payload["actions"]:
+    for action in actions:
         if action["action"] not in ("add", "remove"):
-            return jsonify({"ok": False, "msg": "Payload action is invalid"})
+            return {"ok": False, "msg": "Payload action is invalid"}
 
         if action["type"] not in ("keep", "ignore"):
-            return jsonify({"ok": False, "msg": "Payload type is invalid"})
+            return {"ok": False, "msg": "Payload type is invalid"}
 
         if action["type"] == "keep":
             new_entry = f"!{action['name']}"
@@ -107,8 +120,8 @@ def load_actions(actions):
             new_entry = f"{new_entry}/"
 
         if action["action"] == "add":
-            actions["add"].append(new_entry)
+            parsed["add"].append(new_entry)
         elif action["action"] == "remove":
-            actions["remove"].append(new_entry)
+            parsed["remove"].append(new_entry)
 
-    return actions
+    return parsed

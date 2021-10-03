@@ -9,8 +9,8 @@ import re
 from types import SimpleNamespace
 from pathlib import Path
 
-from stignore_agent.app import app
 from stignore_agent.helpers import parse_config
+from stignore_agent.app import app
 
 
 SEARCH_DEPTH = re.compile(r"!(?P<depth>[0-9]+)!(?P<folder>.+)")
@@ -18,7 +18,9 @@ SEARCH_DEPTH = re.compile(r"!(?P<depth>[0-9]+)!(?P<folder>.+)")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="count", default=0, help="Logging level")
+    parser.add_argument(
+        "-v", "--verbose", action="count", default=0, help="Logging level"
+    )
     parser.add_argument("--host", default="127.0.0.1", help="Host address to listen on")
     parser.add_argument("--port", default="8080", help="Port to listen on")
     parser.add_argument("--config-file", help="Configuration file to load")
@@ -52,7 +54,9 @@ if __name__ == "__main__":
         for folder in folders.split(","):
             if result := SEARCH_DEPTH.match(folder):
                 groups = result.groupdict()
-                config["folder"].append({"name": groups["folder"], "depth": int(groups["depth"])})
+                config["folder"].append(
+                    {"name": groups["folder"], "depth": int(groups["depth"])}
+                )
             else:
                 config["folder"].append({"name": folder})
 
