@@ -9,10 +9,25 @@ import shutil
 
 from pathlib import Path
 
-from flask import Flask, current_app, request, jsonify
+from flask import Flask, current_app, request, jsonify, send_from_directory
 
 
 app = Flask(__name__)
+
+
+@app.route("/")
+def info_page():
+    return jsonify(
+        {
+            "ok": True,
+            "msg": "Please visit https://github.com/dalmura/stignore-agent for more information",
+        }
+    )
+
+
+@app.route("/favicon.ico")
+def favicon():
+     return send_from_directory("static/img", "favicon.ico")
 
 
 @app.route("/api/v1/types")
@@ -28,7 +43,7 @@ def list_content_types():
     )
 
 
-@app.route("/api/v1/<str:content_type>/listing")
+@app.route("/api/v1/<content_type>/listing")
 def content_type_listing(content_type: str):
     """
     Given a valid content type we return a listing of all folders underneath it
@@ -79,7 +94,7 @@ def content_type_listing(content_type: str):
     )
 
 
-@app.route("/api/v1/<str:content_type>/stignore")
+@app.route("/api/v1/<content_type>/stignore")
 def stignore_listing(content_type: str):
     """
     Given a valid content type we return the .stignore files contents
@@ -134,7 +149,7 @@ def stignore_listing(content_type: str):
     )
 
 
-@app.route("/api/v1/<str:content_type>/stignore", methods=["POST"])
+@app.route("/api/v1/<content_type>/stignore", methods=["POST"])
 def stignore_modification(content_type: str):
     """
     Apply a modification to the stignore file
@@ -212,7 +227,7 @@ def stignore_modification(content_type: str):
     return jsonify({"ok": True, "msg": "Actions applied"})
 
 
-@app.route("/api/v1/<str:content_type>/stignore/flush")
+@app.route("/api/v1/<content_type>/stignore/flush")
 def stignore_flush_report(content_type: str):
     """
     Prepare a list of actions that would occur if a flush was to happen
@@ -291,7 +306,7 @@ def stignore_flush_report(content_type: str):
     )
 
 
-@app.route("/api/v1/<str:content_type>/stignore/flush", methods=["POST"])
+@app.route("/api/v1/<content_type>/stignore/flush", methods=["POST"])
 def stignore_flush_delete(content_type: str):
     """
     Flush the stignore file by performing all operations marked in it
