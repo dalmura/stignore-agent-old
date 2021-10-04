@@ -1,0 +1,57 @@
+---
+name: CI Jobs
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  linter:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - run: pip3 install --upgrade pip wheel
+      - run: pip3 install -e '.[dev]'
+
+      - id: black
+        run: black --check .
+
+      - id: pylint
+        run: pylint stignore_agent
+
+    outputs:
+      black_conclusion: ${{ steps.black.conclusion }}
+      pylint_conclusion: ${{ steps.pylint.conclusion }}
+
+  pytest:
+    runs-on: ubuntu-20.04
+
+    needs: linter
+    if: ${{ needs.linter.outputs.black_conclusion == 'success' && needs.linter.outputs.pylint_conclusion == 'success' }}
+
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip3 install --upgrade pip wheel
+      - run: pip3 install -e '.[dev]'
+
+      - run: pytest
