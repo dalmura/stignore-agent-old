@@ -46,7 +46,7 @@ def test_content_type_listing(agent):
 
 def test_stignore_listing(agent):
     stignore_path = agent.config["base_folder"] / "share-1" / ".stignore"
-    stignore_path.write_text("Object 1/")
+    stignore_path.write_text("Object 1/\nObject 2/\n!Object 3/\n")
 
     response = agent.client.get("/api/v1/share-1/stignore")
     assert response.status == "200 OK"
@@ -61,7 +61,19 @@ def test_stignore_listing(agent):
                 "name": "Object 1",
                 "type": "ignore",
             },
+            {
+                "raw": "Object 2/",
+                "name": "Object 2",
+                "type": "ignore",
+            },
+            {
+                "raw": "!Object 3/",
+                "name": "Object 3",
+                "type": "keep",
+            },
         ],
     }
+
+    expected["entries"].sort(key=lambda x: x["raw"])
 
     assert recieved == expected

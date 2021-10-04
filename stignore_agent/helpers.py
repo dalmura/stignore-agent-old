@@ -43,7 +43,7 @@ def load_stignore_file(filename, sort=True):
                 name = line
 
             if name.endswith("/"):
-                name = line[:-1]
+                name = name[:-1]
 
             entries.append(
                 {

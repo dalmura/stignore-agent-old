@@ -185,9 +185,7 @@ def stignore_modification(content_type: str):
 
     # Write out new stignore file
     raw_entries.sort()
-
-    with open(stignore, "wt", encoding="utf-8") as stignore_file:
-        stignore_file.writelines(raw_entries)
+    stignore.write_text("\n".join(raw_entries))
 
     return jsonify({"ok": True, "msg": "Actions applied"})
 
