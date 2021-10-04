@@ -1,5 +1,5 @@
-# stignore-agent-python
-A python implementation of stignore-agent
+# stignore-agent
+HTTP API Agent for managing Syncthing's .stignore files on this machine
 
 # Development
 ## Local Setup
