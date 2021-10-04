@@ -259,14 +259,27 @@ def stignore_flush_delete(content_type: str):
             400,
         )
 
+    payload = request.get_json(force=True)
+
+    if payload.get("action") != "delete":
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "msg": "'action=delete' verification is missing",
+                }
+            ),
+            400,
+        )
+
     entries = load_stignore_file(stignore)
-    actions = stignore_actions(entries, content_folder, include_size=False)
+    actions = stignore_actions(entries, content_folder.path, include_size=False)
 
     for action in actions:
-        if action.action != "delete":
+        if action["action"] != "delete":
             continue
 
-        shutil.rmtree(action.path)
+        shutil.rmtree(action["path"])
 
     return jsonify(
         {

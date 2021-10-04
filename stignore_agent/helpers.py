@@ -77,16 +77,17 @@ def stignore_actions(entries, content_folder, include_size=True):
             # Only looking for entry_path's that exist
             continue
 
-        action = SimpleNamespace(
-            path=str(entry_path),
-            action="delete",
-        )
+        action = {
+            "name": str(entry_path.name),
+            "path": str(entry_path),
+            "action": "delete",
+        }
 
         if include_size:
             size_bytes = sum(
                 f.stat().st_size for f in entry_path.glob("**/*") if f.is_file()
             )
-            action.size_megabytes = size_bytes / 1024 / 1024
+            action["size_megabytes"] = size_bytes / 1024 / 1024
 
         actions.append(action)
 
