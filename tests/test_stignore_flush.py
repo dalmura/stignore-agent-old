@@ -52,7 +52,9 @@ def test_stignore_flush_delete_works(agent):
     # Add in share-1 'Object 1' which does exist locally
     stignore_path.write_text("Object 1/\n")
 
-    response = agent.client.post("/api/v1/share-1/stignore/flush", json={"action": "delete"})
+    response = agent.client.post(
+        "/api/v1/share-1/stignore/flush", json={"action": "delete"}
+    )
     assert response.status == "200 OK"
 
     data = response.get_json()

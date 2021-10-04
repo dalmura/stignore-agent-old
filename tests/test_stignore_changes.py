@@ -24,14 +24,19 @@ def test_stignore_add_entries(agent):
     response = agent.client.post("/api/v1/share-1/stignore", json={"actions": actions})
     assert response.status == "200 OK"
 
-    expected_entries = sorted([
-        "Object 1/",
-        "!Object 2/",
-    ])
+    expected_entries = sorted(
+        [
+            "Object 1/",
+            "!Object 2/",
+        ]
+    )
 
-    actual_entries = [entry for entry in stignore_path.read_text().split('\n') if entry != '']
-    
+    actual_entries = [
+        entry for entry in stignore_path.read_text().split("\n") if entry != ""
+    ]
+
     assert expected_entries == actual_entries
+
 
 def test_stignore_remove_entries(agent):
     # Create the .stignore file
@@ -54,10 +59,14 @@ def test_stignore_remove_entries(agent):
     response = agent.client.post("/api/v1/share-1/stignore", json={"actions": actions})
     assert response.status == "200 OK"
 
-    expected_entries = sorted([
-        "Object 3/",
-    ])
+    expected_entries = sorted(
+        [
+            "Object 3/",
+        ]
+    )
 
-    actual_entries = [entry for entry in stignore_path.read_text().split('\n') if entry != '']
-    
+    actual_entries = [
+        entry for entry in stignore_path.read_text().split("\n") if entry != ""
+    ]
+
     assert expected_entries == actual_entries

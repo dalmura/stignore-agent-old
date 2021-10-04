@@ -38,7 +38,7 @@ def test_content_type_listing(agent):
                 "name": "Object 3",
                 "size_megabytes": 5,
             },
-        ]
+        ],
     }
 
     assert recieved == expected
