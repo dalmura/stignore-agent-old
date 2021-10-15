@@ -15,6 +15,13 @@ from stignore_agent.helpers import load_stignore_file, stignore_actions, load_ac
 app = Flask("stignore-agent")
 
 
+@app.after_request
+def after_request(response):
+    headers = response.headers
+    headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
 @app.route("/")
 def info_page():
     """Basic info page for users discovering this through their browser"""

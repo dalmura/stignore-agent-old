@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Set up a local folder structure for end-to-end testing of the stignore-agent with a stignore-manager
 

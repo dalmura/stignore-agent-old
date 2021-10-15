@@ -133,3 +133,4 @@ dmypy.json
 
 # stagent-ignore specific
 config.yml
+scripts/test_*
