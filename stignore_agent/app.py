@@ -17,6 +17,7 @@ app = Flask("stignore-agent")
 
 @app.after_request
 def after_request(response):
+    """Apply extra CORS header"""
     headers = response.headers
     headers["Access-Control-Allow-Origin"] = "*"
     return response
