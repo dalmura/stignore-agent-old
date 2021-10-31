@@ -4,7 +4,7 @@ import pytest
 
 
 def test_content_types(agent):
-    response = agent.client.get("/api/v1/types")
+    response = agent.client.get("/api/v1/discover")
     assert response.status == "200 OK"
 
     recieved = json.loads(response.data)

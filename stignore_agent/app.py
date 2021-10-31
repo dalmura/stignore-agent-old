@@ -40,7 +40,7 @@ def favicon():
     return send_from_directory("static/img", "favicon.ico")
 
 
-@app.route("/api/v1/types")
+@app.route("/api/v1/discover")
 def list_content_types():
     """Returns all configured content type folders"""
     folders = current_app.config["folders"]
