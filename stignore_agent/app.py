@@ -48,7 +48,7 @@ def list_content_types():
     return jsonify(
         {
             "ok": True,
-            "content_types": list(folders.keys()),
+            "content_types": list({"name": name} for name in folders.keys())
         }
     )
 

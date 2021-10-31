@@ -11,7 +11,10 @@ def test_content_types(agent):
 
     expected = {
         "ok": True,
-        "content_types": ["share-1", "share-2"],
+        "content_types": [
+            {"name": "share-1"},
+            {"name": "share-2"},
+        ],
     }
 
     assert recieved == expected
