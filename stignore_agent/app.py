@@ -86,6 +86,10 @@ def content_type_listing(content_type: str):
             # We're only interested in folders
             continue
 
+        if content.name.startswith(".st"):
+            # We skip the syncthing specific folders
+            continue
+
         folders.append(
             {
                 "name": content.name,
