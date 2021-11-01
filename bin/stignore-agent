@@ -54,11 +54,11 @@ if __name__ == "__main__":
         for folder in folders.split(","):
             if result := SEARCH_DEPTH.match(folder):
                 groups = result.groupdict()
-                config["folder"].append(
+                config["folders"].append(
                     {"name": groups["folder"], "depth": int(groups["depth"])}
                 )
             else:
-                config["folder"].append({"name": folder})
+                config["folders"].append({"name": folder})
 
     if not config.get("base_folder") or not config.get("folders"):
         parser.error("--config-file not set or ENV vars not provided")
