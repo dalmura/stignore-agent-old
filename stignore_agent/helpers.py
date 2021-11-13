@@ -42,6 +42,9 @@ def load_stignore_file(filename, sort=True):
                 ignore_type = "ignore"
                 name = line
 
+            # We want to drop the trailing slash
+            # As this means 'the contents of the folder but not the folder itself
+            # And we want the folder itself included in this decision
             if name.endswith("/"):
                 name = name[:-1]
 
@@ -49,7 +52,7 @@ def load_stignore_file(filename, sort=True):
                 {
                     "raw": line,
                     "name": name,
-                    "type": ignore_type,
+                    "ignore_type": ignore_type,
                 }
             )
 
@@ -67,7 +70,7 @@ def stignore_actions(entries, content_folder, include_size=True):
     actions = []
 
     for entry in entries:
-        if entry["type"] != "ignore":
+        if entry["ignore_type"] != "ignore":
             # We're only looking for entries that could result in cleaning up
             continue
 
@@ -109,10 +112,10 @@ def load_actions(actions):
         if action["action"] not in ("add", "remove"):
             return {"ok": False, "msg": "Payload action is invalid"}
 
-        if action["type"] not in ("keep", "ignore"):
-            return {"ok": False, "msg": "Payload type is invalid"}
+        if action["ignore_type"] not in ("keep", "ignore"):
+            return {"ok": False, "msg": "Payload ignore_type is invalid"}
 
-        if action["type"] == "keep":
+        if action["ignore_type"] == "keep":
             new_entry = f"!{action['name']}"
         else:
             new_entry = action["name"]
