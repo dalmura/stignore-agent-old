@@ -30,10 +30,17 @@ def load_stignore_file(filename, sort=True):
     """
     entries = []
 
+    ignored_lines = [
+        ".stignore.swp",
+    ]
+
     with open(filename, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
             if line.endswith("\n"):
                 line = line[:-1]
+
+            if line in ignored_lines:
+                continue
 
             if line.startswith("!"):
                 ignore_type = "keep"
