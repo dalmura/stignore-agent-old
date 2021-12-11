@@ -109,13 +109,13 @@ def load_actions(actions):
     }
 
     for action in actions:
-        if action["action"] not in ("add", "remove"):
+        if action.get("action") not in ("add", "remove"):
             return {"ok": False, "msg": "Payload action is invalid"}
 
-        if action["ignore_type"] not in ("keep", "ignore"):
+        if action.get("ignore_type") not in ("keep", "ignore"):
             return {"ok": False, "msg": "Payload ignore_type is invalid"}
 
-        if action["ignore_type"] == "keep":
+        if action.get("ignore_type") == "keep":
             new_entry = f"!{action['name']}"
         else:
             new_entry = action["name"]
@@ -123,9 +123,11 @@ def load_actions(actions):
         if not new_entry.endswith("/"):
             new_entry = f"{new_entry}/"
 
-        if action["action"] == "add":
+        if action.get("action") == "add":
             parsed["add"].append(new_entry)
-        elif action["action"] == "remove":
+        elif action.get("action") == "remove":
             parsed["remove"].append(new_entry)
+        else:
+            return {"ok": False, "msg": "Payload action is invalid"}
 
     return parsed
