@@ -21,6 +21,7 @@ def after_request(response):
     headers = response.headers
     headers["Access-Control-Allow-Origin"] = "*"
     headers["Access-Control-Allow-Methods"] = "*"
+    headers["Access-Control-Allow-Headers"] = "*"
     return response
 
 
