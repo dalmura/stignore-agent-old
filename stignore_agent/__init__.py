@@ -3,4 +3,4 @@ VERSION here is used to control pypi package version
 """
 
 
-VERSION = "v0.0.8"
+VERSION = "v0.0.9"
