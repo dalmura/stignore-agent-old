@@ -11,12 +11,12 @@ def test_stignore_add_entries(agent):
     actions = [
         {
             "action": "add",
-            "type": "ignore",
+            "ignore_type": "ignore",
             "name": "Object 1",
         },
         {
             "action": "add",
-            "type": "keep",
+            "ignore_type": "keep",
             "name": "Object 2",
         },
     ]
@@ -46,12 +46,12 @@ def test_stignore_remove_entries(agent):
     actions = [
         {
             "action": "remove",
-            "type": "ignore",
+            "ignore_type": "ignore",
             "name": "Object 2",
         },
         {
             "action": "remove",
-            "type": "keep",
+            "ignore_type": "keep",
             "name": "Object 1",
         },
     ]

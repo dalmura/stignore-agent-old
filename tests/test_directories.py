@@ -62,17 +62,17 @@ def test_stignore_listing(agent):
             {
                 "raw": "Object 1/",
                 "name": "Object 1",
-                "type": "ignore",
+                "ignore_type": "ignore",
             },
             {
                 "raw": "Object 2/",
                 "name": "Object 2",
-                "type": "ignore",
+                "ignore_type": "ignore",
             },
             {
                 "raw": "!Object 3/",
                 "name": "Object 3",
-                "type": "keep",
+                "ignore_type": "keep",
             },
         ],
     }

@@ -52,9 +52,14 @@ def test_stignore_flush_delete_works(agent):
     # Add in share-1 'Object 1' which does exist locally
     stignore_path.write_text("Object 1/\n")
 
-    response = agent.client.post(
-        "/api/v1/share-1/stignore/flush", json={"action": "delete"}
-    )
+    # Get the pending actions
+    response = agent.client.get("/api/v1/share-1/stignore/flush")
+    assert response.status == "200 OK"
+
+    data = response.get_json()
+
+    # Post back the pending actions
+    response = agent.client.post("/api/v1/share-1/stignore/flush", json=data)
     assert response.status == "200 OK"
 
     data = response.get_json()
@@ -68,6 +73,7 @@ def test_stignore_flush_delete_works(agent):
                 "name": str(object_1_path.name),
                 "path": str(object_1_path),
                 "action": "delete",
+                "size_megabytes": 25.0,
             },
         ],
     }
@@ -85,11 +91,43 @@ def test_stignore_flush_delete_check_works(agent):
     # Add in share-1 'Object 1' which does exist locally
     stignore_path.write_text("Object 1/\n")
 
-    # Attempt to perform the delete
-    response = agent.client.post("/api/v1/share-1/stignore/flush", json={"foo": "bar"})
+    # Attempt to perform the delete with no payload
+    response = agent.client.post("/api/v1/share-1/stignore/flush", json={})
     assert response.status == "400 BAD REQUEST"
 
     assert response.get_json() == {
         "ok": False,
-        "msg": "'action=delete' verification is missing",
+        "msg": "Missing 'actions' confirmation",
+    }
+
+    # Attempt to perform the delete with a different number of items
+    response = agent.client.post(
+        "/api/v1/share-1/stignore/flush", json={"actions": [{"a": 1}, {"b": 2}]}
+    )
+    assert response.status == "400 BAD REQUEST"
+
+    assert response.get_json() == {
+        "ok": False,
+        "msg": "Invalid actions payload validation (invalid length)",
+    }
+
+    # Attempt to perform the delete with a different payload
+    response = agent.client.post(
+        "/api/v1/share-1/stignore/flush",
+        json={
+            "actions": [
+                {
+                    "name": "Object 4",
+                    "path": "Object 4/",
+                    "action": "delete",
+                    "size_megabytes": 10.5,
+                }
+            ]
+        },
+    )
+    assert response.status == "400 BAD REQUEST"
+
+    assert response.get_json() == {
+        "ok": False,
+        "msg": "Invalid actions payload validation (item 1)",
     }

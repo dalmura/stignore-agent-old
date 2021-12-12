@@ -48,10 +48,7 @@ def list_content_types():
     folders = current_app.config["folders"]
 
     return jsonify(
-        {
-            "ok": True,
-            "content_types": list({"name": name} for name in folders.keys())
-        }
+        {"ok": True, "content_types": list({"name": name} for name in folders.keys())}
     )
 
 
@@ -199,7 +196,7 @@ def stignore_modification(content_type: str):
 
     # Write out new stignore file
     raw_entries.sort()
-    stignore.write_text("\n".join(raw_entries))
+    stignore.write_text("\n".join(raw_entries) + "\n")
 
     return jsonify({"ok": True, "msg": "Actions applied"})
 
@@ -227,7 +224,7 @@ def stignore_flush_report(content_type: str):
             jsonify(
                 {
                     "ok": False,
-                    "msg": ".stignore doesn't exists for the provided content_type",
+                    "msg": ".stignore doesn't exist for the provided content_type",
                 }
             ),
             400,
@@ -246,6 +243,7 @@ def stignore_flush_report(content_type: str):
 
 @app.route("/api/v1/<content_type>/stignore/flush", methods=["POST"])
 def stignore_flush_delete(content_type: str):
+    # pylint: disable=too-many-branches
     """
     Flush the stignore file by performing all operations marked in it
     This is mainly used to clean up all folders we've marked to ignore
@@ -274,20 +272,50 @@ def stignore_flush_delete(content_type: str):
         )
 
     payload = request.get_json(force=True)
+    payload_actions = payload.get("actions")
 
-    if payload.get("action") != "delete":
+    if not payload_actions:
+        return (
+            jsonify({"ok": False, "msg": "Missing 'actions' confirmation"}),
+            400,
+        )
+
+    entries = load_stignore_file(stignore)
+    actions = stignore_actions(entries, content_folder.path)
+
+    if len(actions) != len(payload_actions):
         return (
             jsonify(
                 {
                     "ok": False,
-                    "msg": "'action=delete' verification is missing",
+                    "msg": "Invalid actions payload validation (invalid length)",
                 }
             ),
             400,
         )
 
-    entries = load_stignore_file(stignore)
-    actions = stignore_actions(entries, content_folder.path, include_size=False)
+    for i, (src, dst) in enumerate(zip(payload_actions, actions), start=1):
+        if src.get("name") != dst.get("name"):
+            valid = False
+        elif src.get("path") != dst.get("path"):
+            valid = False
+        elif src.get("action") != dst.get("action"):
+            valid = False
+        elif src.get("size_megabytes") != dst.get("size_megabytes"):
+            valid = False
+        else:
+            valid = True
+
+        if not valid:
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "msg": f"Invalid actions payload validation (item {i})",
+                    }
+                ),
+                400,
+            )
 
     for action in actions:
         if action["action"] != "delete":
