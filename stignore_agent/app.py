@@ -196,7 +196,7 @@ def stignore_modification(content_type: str):
 
     # Write out new stignore file
     raw_entries.sort()
-    stignore.write_text("\n".join(raw_entries) + "\n")
+    stignore.write_text("\n".join(raw_entries) + "\n" if raw_entries else "")
 
     return jsonify({"ok": True, "msg": "Actions applied"})
 
