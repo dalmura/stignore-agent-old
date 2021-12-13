@@ -32,6 +32,10 @@ def load_stignore_file(filename, sort=True):
 
     with open(filename, "rt", encoding="utf-8") as stignore_file:
         for line in stignore_file:
+            if line.startswith("//") or line == "\n":
+                # Line is a comment or is empty
+                continue
+
             if line.endswith("\n"):
                 line = line[:-1]
 
