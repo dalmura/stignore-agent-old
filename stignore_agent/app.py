@@ -295,9 +295,7 @@ def stignore_flush_delete(content_type: str):
         )
 
     for i, (src, dst) in enumerate(zip(payload_actions, actions), start=1):
-        if src.get("name") != dst.get("name"):
-            valid = False
-        elif src.get("path") != dst.get("path"):
+        if src.get("path") != dst.get("path"):
             valid = False
         elif src.get("action") != dst.get("action"):
             valid = False
