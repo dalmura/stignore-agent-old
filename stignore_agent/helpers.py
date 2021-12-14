@@ -52,6 +52,9 @@ def load_stignore_file(filename, sort=True):
             if name.endswith("/"):
                 name = name[:-1]
 
+            if line.endswith("/"):
+                line = line[:-1]
+
             entries.append(
                 {
                     "raw": line,
@@ -124,8 +127,8 @@ def load_actions(actions):
         else:
             new_entry = action["name"]
 
-        if not new_entry.endswith("/"):
-            new_entry = f"{new_entry}/"
+        if new_entry.endswith("/"):
+            new_entry = new_entry[:-1]
 
         if action.get("action") == "add":
             parsed["add"].append(new_entry)
